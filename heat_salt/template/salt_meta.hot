@@ -1,0 +1,14 @@
+resources:
+  minion_metadata:
+    type: OS::Salt:Metadata
+    properties:
+      name: { get_attr: ['instance', 'name'] }
+      classes:
+      - system.linux.sytem
+      - system.openstack.control
+      parameters:
+        single_address: { get_attr: ['instance', 'first_address'] }
+        database_password: { get_attr: ['random_password', 'value'] }
+      salt_host: { get_param: salt_host }
+      salt_user: { get_param: salt_user }
+      salt_password: { get_param: salt_password }

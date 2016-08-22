@@ -1,0 +1,16 @@
+resources:
+  minion_key:
+    type: OS::Salt:Key
+    properties:
+      name: { get_param: key_name }
+      public_key: { get_param: key_value }
+      save_private_key: false
+
+
+      salt_host: { get_param: salt_master }
+      salt_user: { get_param: salt_user }
+      salt_password: { get_param: salt_password }
+      name: { get_param: instance_nam }
+
+
+      ', 'user', 'password', 'hostname', 'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
