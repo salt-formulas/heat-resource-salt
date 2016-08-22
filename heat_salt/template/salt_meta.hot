@@ -3,11 +3,13 @@ resources:
     type: OS::Salt:Metadata
     properties:
       name: { get_attr: ['instance', 'name'] }
+      type: reclass
       classes:
       - system.linux.sytem
       - system.openstack.control
       parameters:
         single_address: { get_attr: ['instance', 'first_address'] }
+        vip_address: { get_attr: ['instance_port', 'alternate_address'] }
         database_password: { get_attr: ['random_password', 'value'] }
       salt_host: { get_param: salt_host }
       salt_user: { get_param: salt_user }

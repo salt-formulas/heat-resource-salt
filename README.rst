@@ -1,10 +1,23 @@
 
-==============
-saltstack-heat
-==============
+========================
+SaltStack Heat Resources
+========================
 
-Heat plugin with resources for integrating compute nodes with SaltStack configuration management service.
+Heat plugin with resources to ease integration of OpenStack virtual server
+with SaltStack configuration management.
 
-* Salt Key
-* Salt Metadata
+ 
+Resources
+=========
 
+
+Salt Key
+--------
+
+Gereates and sets key for given server name.
+
+
+Salt Metadata
+-------------
+
+Sets metadata (classes and parameters) for given server name.
