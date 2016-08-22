@@ -11,24 +11,23 @@ from heat.engine import resource
 from heat.engine import constraints
 from heat.engine import properties
 
-import base64
-
 try:
     from heat.openstack.common import log as logging
 except ImportError:
     from oslo_log import log as logging
 
-from chef import ChefAPI, Node, Client
+from .salt_auth import SaltAuth
 
 logger = logging.getLogger(__name__)
 
-class SaltMinion(resource.Resource):
+
+class SaltKey(SaltAuth):
 
     PROPERTIES = (
         SALT_HOST, USER, PASSWORD, HOSTNAME, DOMAIN, RUN_LIST, ENVIRONMENT, DOMAIN_PREPEND_TENANT_NAME
 
     ) = (
-        'chef_host', 'user', 'password', 'hostname', 'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
+        'salt_host', 'user', 'password', 'hostname', 'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
     )
 
     ATTRIBUTES = (
@@ -69,24 +68,6 @@ class SaltMinion(resource.Resource):
             update_allowed=False,
             required=True,
         ),
-        RUN_LIST: properties.Schema(
-            properties.Schema.STRING,
-            _('Node run list'),
-            update_allowed=True,
-            required=False,
-        ),
-        ENVIRONMENT: properties.Schema(
-            properties.Schema.STRING,
-            _('Chef environment'),
-            update_allowed=True,
-            required=True,
-        ),
-        DOMAIN_PREPEND_TENANT_NAME: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('Prepend tenant name to domain name'),
-            update_allowed=False,
-            required=True,
-        ),
     }
 
     attributes_schema = {
@@ -100,21 +81,10 @@ class SaltMinion(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(SaltMinion, self).__init__(name, json_snippet, stack)
 
-    def _login():
-
-        url = 'https://%s:8000' % self.properties[self.SALT_HOST]
-        headers = {'Accept':'application/json'}
-        login_payload = {
-            'username': self.properties[self.USERNAME],
-            'password': self.properties[self.PASSWORD],
-            'eauth':'pam'
-        }
-
-        self.login = requests.post(os.path.join(url, 'login'), headers=headers, data=login_payload)
 
     def handle_create(self):
 
-        self._login()
+        self.login()
     
         self.registered_name = self.properties[self.HOSTNAME]+"."+ self.properties[self.DOMAIN]
 
@@ -153,11 +123,12 @@ class SaltMinion(resource.Resource):
 
     def handle_delete(self):
 
-        self._login()
+        self.login()
 
         logger.error("Could not delete node %s", self.resource_id)
 
+
 def resource_mapping():
     return {
-        'OS::Salt::Minion': SaltMinion,
+        'OS::Salt::Key': SaltKey,
     }

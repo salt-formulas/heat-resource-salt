@@ -1,12 +1,10 @@
 
-================
-integration-heat
-================
+==============
+saltstack-heat
+==============
 
-Heat plugins and resources for integrating compute nodes with various configuration management services:
+Heat plugin with resources for integrating compute nodes with SaltStack configuration management service.
 
-* Chef Master
-* Salt Master
-* Puppet Master
-* FreeIPA Server
+* Salt Key
+* Salt Metadata
 
