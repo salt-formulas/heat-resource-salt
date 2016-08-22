@@ -124,5 +124,5 @@ class SaltMetadata(SaltAuth):
 
 def resource_mapping():
     return {
-        'OS::Salt::Key': SaltKey,
+        'Salt::Minion::Key': SaltKey,
     }
