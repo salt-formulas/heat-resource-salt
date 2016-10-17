@@ -18,16 +18,23 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class SaltAuth(resource.Resource):
 
-    def login():
+    @property
+    def salt_master_url(self):
+        return '%s://%s:8000' % (self.properties.get(self.SALT_HOST_PROTOCOL),
+                                 self.properties[self.SALT_HOST])
 
-        url = 'https://%s:8000' % self.properties[self.SALT_HOST]
-        headers = {'Accept':'application/json'}
+    def login(self):
+
+        headers = {'Accept': 'application/json'}
         login_payload = {
             'username': self.properties[self.USERNAME],
             'password': self.properties[self.PASSWORD],
-            'eauth':'pam'
+            'eauth': 'pam'
         }
 
-        self.login = requests.post(os.path.join(url, 'login'), headers=headers, data=login_payload)
+        self.login = requests.post(
+            os.path.join(self.salt_master_url,
+                         'login'), headers=headers, data=login_payload)

@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 class SaltKey(SaltAuth):
 
     PROPERTIES = (
-        SALT_HOST, USER, PASSWORD, HOSTNAME, DOMAIN, RUN_LIST, ENVIRONMENT, DOMAIN_PREPEND_TENANT_NAME
-
-    ) = (
-        'salt_host', 'user', 'password', 'hostname', 'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
+        SALT_HOST, SALT_HOST_PROTOCOL, USER, PASSWORD, HOSTNAME,
+        DOMAIN, RUN_LIST, ENVIRONMENT, DOMAIN_PREPEND_TENANT_NAME) = (
+        'salt_host', 'salt_host_protocol', 'user', 'password', 'hostname',
+        'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
     )
 
     ATTRIBUTES = (
@@ -77,30 +77,28 @@ class SaltKey(SaltAuth):
 
     update_allowed_keys = ('Properties',)
 
-
-    def __init__(self, name, json_snippet, stack):
-        super(SaltMinion, self).__init__(name, json_snippet, stack)
-
-
     def handle_create(self):
 
         self.login()
-    
-        self.registered_name = self.properties[self.HOSTNAME]+"."+ self.properties[self.DOMAIN]
 
-        headers = {'Accept':'application/json'}
+        self.registered_name = self.properties[
+            self.HOSTNAME] + "." + self.properties[self.DOMAIN]
+
+        headers = {'Accept': 'application/json'}
         accept_key_payload = {
             'fun': 'key.gen_accept',
-            'client':'wheel',
-            'tgt':'*',
+            'client': 'wheel',
+            'tgt': '*',
             'match': self.registered_name
         }
 
-        request = requests.post(url,headers=headers,data=accept_key_payload,cookies=self.login.cookies)
+        request = requests.post(self.salt_master_url, headers=headers,
+                                data=accept_key_payload,
+                                cookies=self.login.cookies)
 
         keytype = request.json()['return'][0]['data']['return']
         if keytype:
-            for key,value in keytype.items():
+            for key, value in keytype.items():
                 if value[0] == self.registered_name:
 
                     self.data_set('private_key', value[1], redact=True)
@@ -111,10 +109,11 @@ class SaltKey(SaltAuth):
                     return True
                     break
                 else:
-                    raise Exception('{} does not match!'.format(keyname))
+                    raise Exception('{} does not match!'.format(key))
         else:
-            raise Exception('{} key does not exist in master until now...'.format(keyname)) 
-            
+            raise Exception(
+                '{} key does not exist in master until now...'.format(keytype))
+
     def _resolve_attribute(self, name):
         if name == 'private_key':
             return self.data().get('private_key')

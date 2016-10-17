@@ -71,30 +71,30 @@ class SaltMetadata(SaltAuth):
 
     update_allowed_keys = ('Properties',)
 
-
-    def __init__(self, name, json_snippet, stack):
-        super(SaltMetadata, self).__init__(name, json_snippet, stack)
-
-
     def handle_create(self):
 
         self.login()
-    
-        self.registered_name = self.properties[self.HOSTNAME]+"."+ self.properties[self.DOMAIN]
 
-        headers = {'Accept':'application/json'}
+        self.registered_name = '.'.join([
+            self.properties[self.HOSTNAME],
+            self.properties[self.DOMAIN]])
+
+        headers = {'Accept': 'application/json'}
         accept_key_payload = {
             'fun': 'key.gen_accept',
-            'client':'wheel',
-            'tgt':'*',
+            'client': 'wheel',
+            'tgt': '*',
             'match': self.registered_name
         }
 
-        request = requests.post(url,headers=headers,data=accept_key_payload,cookies=self.login.cookies)
+        request = requests.post(
+            self.salt_master_url, headers=headers,
+            data=accept_key_payload,
+            cookies=self.login.cookies)
 
         keytype = request.json()['return'][0]['data']['return']
         if keytype:
-            for key,value in keytype.items():
+            for key, value in keytype.items():
                 if value[0] == self.registered_name:
 
                     self.data_set('private_key', value[1], redact=True)
@@ -105,10 +105,11 @@ class SaltMetadata(SaltAuth):
                     return True
                     break
                 else:
-                    raise Exception('{} does not match!'.format(keyname))
+                    raise Exception('{} does not match!'.format(key))
         else:
-            raise Exception('{} key does not exist in master until now...'.format(keyname)) 
-            
+            raise Exception(
+                '{} key does not exist in master until now...'.format(keytype))
+
     def _resolve_attribute(self, name):
         if name == 'classes':
             return self.data().get('classes')
@@ -124,5 +125,5 @@ class SaltMetadata(SaltAuth):
 
 def resource_mapping():
     return {
-        'Salt::Minion::Key': SaltKey,
+        'Salt::Minion::Key': SaltMetadata,
     }
