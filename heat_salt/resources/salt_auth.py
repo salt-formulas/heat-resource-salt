@@ -8,8 +8,6 @@ except ImportError:
     pass
 
 from heat.engine import resource
-from heat.engine import constraints
-from heat.engine import properties
 
 try:
     from heat.openstack.common import log as logging

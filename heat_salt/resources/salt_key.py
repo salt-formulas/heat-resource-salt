@@ -1,14 +1,11 @@
 
 import requests
-import os
 
 try:
     from heat.common.i18n import _
 except ImportError:
     pass
 
-from heat.engine import resource
-from heat.engine import constraints
 from heat.engine import properties
 
 try:
