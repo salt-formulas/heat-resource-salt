@@ -6,6 +6,7 @@ try:
 except ImportError:
     pass
 
+from heat.engine import attributes
 from heat.engine import properties
 
 try:
