@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SaltKey(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, HOST_NAME
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME
     ) = (
         'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name'
     )
