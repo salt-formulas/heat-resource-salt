@@ -6,6 +6,7 @@ try:
 except ImportError:
     pass
 
+from heat.engine import attributes
 from heat.engine import properties
 
 try:
@@ -13,81 +14,102 @@ try:
 except ImportError:
     from oslo_log import log as logging
 
-from .salt_auth import SaltAuth
+from heat_salt.resources import salt
 
 logger = logging.getLogger(__name__)
 
 
-class SaltMetadata(SaltAuth):
+class SaltMetadata(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_USER, SALT_PASSWORD, HOSTNAME, CLASSES, PARAMETERS
-
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, CLASSES, PARAMETERS
     ) = (
-        'salt_host', 'user', 'password', 'hostname'
-    )
-
-    ATTRIBUTES = (
-        PRIVATE_KEY, REGISTERED_NAME
-    ) = (
-        'classes', 'parameters'
+        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'classes', 'parameters'
     )
 
     properties_schema = {
         SALT_HOST: properties.Schema(
             properties.Schema.STRING,
-            _('Salt Master Host'),
+            _('Salt Master API address.'),
             update_allowed=False,
             required=True,
         ),
-        USER: properties.Schema(
+        SALT_PORT: properties.Schema(
             properties.Schema.STRING,
-            _('Salt user'),
+            _('Salt Master API port.'),
+            update_allowed=False,
+            default='8000',
+            required=True,
+        ),
+        SALT_PROTO: properties.Schema(
+            properties.Schema.STRING,
+            _('Salt Master API protocol.'),
+            update_allowed=False,
+            default='http',
+            required=True,
+        ),
+        SALT_USER: properties.Schema(
+            properties.Schema.STRING,
+            _('Salt master user name.'),
             update_allowed=False,
             default='admin',
             required=True,
         ),
-        PASSWORD: properties.Schema(
+        SALT_PASSWORD: properties.Schema(
             properties.Schema.STRING,
-            _('Salt password'),
+            _('Salt user password.'),
             update_allowed=False,
             required=True,
         ),
-        HOSTNAME: properties.Schema(
+        NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Hostname'),
+            _('Managed server name.'),
             update_allowed=False,
             required=True,
-        )
+        ),
+        CLASSES: properties.Schema(
+            properties.Schema.STRING,
+            _('Managed server classes.'),
+            update_allowed=False,
+            required=True,
+        ),
+        PARAMETERS: properties.Schema(
+            properties.Schema.STRING,
+            _('Managed server parameters.'),
+            update_allowed=False,
+            required=True,
+        ),
     }
 
     attributes_schema = {
-        "classes": _("Classes assigned to the node."),
-        "parameters": _("Optional parameters of the node."),
+        "name": attributes.Schema(
+            _('Name of the host.'),
+        ),
+        "classes": attributes.Schema(
+            _('Classes assigned to the node.'),
+        ),
+        "parameters": attributes.Schema(
+            _('Optional parameters of the node.'),
+        ),
     }
 
-    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
-
         self.login()
-
-        self.registered_name = '.'.join([
-            self.properties[self.HOSTNAME],
-            self.properties[self.DOMAIN]])
+        self.name = self.properties.get(self.NAME)
 
         headers = {'Accept': 'application/json'}
-        accept_key_payload = {
+        
+        payload = {
             'fun': 'key.gen_accept',
             'client': 'wheel',
             'tgt': '*',
-            'match': self.registered_name
+            'match': self.name
         }
 
         request = requests.post(
             self.salt_master_url, headers=headers,
-            data=accept_key_payload,
-            cookies=self.login.cookies)
+            data=payload, cookies=self.login.cookies)
 
         keytype = request.json()['return'][0]['data']['return']
         if keytype:
@@ -95,9 +117,9 @@ class SaltMetadata(SaltAuth):
                 if value[0] == self.registered_name:
 
                     self.data_set('private_key', value[1], redact=True)
-                    self.data_set('registered_name', self.value[0])
+                    self.data_set('name', self.value[0])
 
-                    self.resource_id_set(self.registered_name)
+                    self.resource_id_set(self.name)
 
                     return True
                     break
@@ -107,20 +129,19 @@ class SaltMetadata(SaltAuth):
             raise Exception(
                 '{} key does not exist in master until now...'.format(keytype))
 
-    def _resolve_attribute(self, name):
-        if name == 'classes':
-            return self.data().get('classes')
-        if name == 'parameters':
-            return self.data().get('parameters')
+
+    def _show_resource(self):
+        return self.data()
+
 
     def handle_delete(self):
 
         self.login()
 
-        logger.error("Could not delete node %s", self.resource_id)
+        logger.error("Could not delete node %s metadata", self.resource_id)
 
 
 def resource_mapping():
     return {
-        'Salt::Minion::Key': SaltMetadata,
+        'Salt::Minion::Metadata': SaltMetadata,
     }

@@ -13,85 +13,91 @@ try:
 except ImportError:
     from oslo_log import log as logging
 
-from .salt_auth import SaltAuth
+from heat_salt.resources import salt
 
 logger = logging.getLogger(__name__)
 
 
-class SaltKey(SaltAuth):
+class SaltKey(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_HOST_PROTOCOL, USER, PASSWORD, HOSTNAME,
-        DOMAIN, RUN_LIST, ENVIRONMENT, DOMAIN_PREPEND_TENANT_NAME) = (
-        'salt_host', 'salt_host_protocol', 'user', 'password', 'hostname',
-        'domain', 'run_list', 'environment', 'domain_prepend_tenant_name'
-    )
-
-    ATTRIBUTES = (
-        PRIVATE_KEY, REGISTERED_NAME
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, HOST_NAME
     ) = (
-        'private_key', 'registered_name'
+        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name'
     )
 
     properties_schema = {
         SALT_HOST: properties.Schema(
             properties.Schema.STRING,
-            _('Salt Master Host'),
+            _('Salt Master API address.'),
             update_allowed=False,
             required=True,
         ),
-        USER: properties.Schema(
+        SALT_PORT: properties.Schema(
             properties.Schema.STRING,
-            _('Salt user'),
+            _('Salt Master API port.'),
+            update_allowed=False,
+            default='8000',
+            required=True,
+        ),
+        SALT_PROTO: properties.Schema(
+            properties.Schema.STRING,
+            _('Salt Master API protocol.'),
+            update_allowed=False,
+            default='http',
+            required=True,
+        ),
+        SALT_USER: properties.Schema(
+            properties.Schema.STRING,
+            _('Salt master user name.'),
             update_allowed=False,
             default='admin',
             required=True,
         ),
-        PASSWORD: properties.Schema(
+        SALT_PASSWORD: properties.Schema(
             properties.Schema.STRING,
-            _('Salt password'),
+            _('Salt user password.'),
             update_allowed=False,
             required=True,
         ),
-        HOSTNAME: properties.Schema(
+        NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Server hostname'),
-            update_allowed=False,
-            required=True,
-        ),
-        DOMAIN: properties.Schema(
-            properties.Schema.STRING,
-            _('Server domainname'),
+            _('Managed server name'),
             update_allowed=False,
             required=True,
         ),
     }
 
     attributes_schema = {
-        "private_key": _("Private key of the node."),
-        "registered_name": _("FQDN of registered node ."),
+        "name": attributes.Schema(
+            _('Name of the server.'),
+        ),
+        "private_key": attributes.Schema(
+            _('Private key of the node.'),
+        ),
+        "public_key": attributes.Schema(
+            _('Public key of the node.'),
+        ),
     }
 
-    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
 
         self.login()
 
-        self.registered_name = self.properties[
-            self.HOSTNAME] + "." + self.properties[self.DOMAIN]
+        self.name = self.properties.get(self.NAME)
 
         headers = {'Accept': 'application/json'}
-        accept_key_payload = {
+
+        payload = {
             'fun': 'key.gen_accept',
             'client': 'wheel',
             'tgt': '*',
-            'match': self.registered_name
+            'match': self.name
         }
 
         request = requests.post(self.salt_master_url, headers=headers,
-                                data=accept_key_payload,
-                                cookies=self.login.cookies)
+                                data=payload, cookies=self.login.cookies)
 
         keytype = request.json()['return'][0]['data']['return']
         if keytype:
@@ -111,17 +117,14 @@ class SaltKey(SaltAuth):
             raise Exception(
                 '{} key does not exist in master until now...'.format(keytype))
 
-    def _resolve_attribute(self, name):
-        if name == 'private_key':
-            return self.data().get('private_key')
-        if name == 'registered_name':
-            return self.data().get('registered_name')
+
+    def _show_resource(self):
+        return self.data()
+
 
     def handle_delete(self):
-
         self.login()
-
-        logger.error("Could not delete node %s", self.resource_id)
+        logger.error("Could not delete node %s key", self.resource_id)
 
 
 def resource_mapping():
