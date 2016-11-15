@@ -19,12 +19,12 @@ from heat_salt.resources import salt
 logger = logging.getLogger(__name__)
 
 
-class SaltKey(salt.SaltResource):
+class MinionKey(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, KEYSIZE
     ) = (
-        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name'
+        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'keysize'
     )
 
     properties_schema = {
@@ -35,10 +35,10 @@ class SaltKey(salt.SaltResource):
             required=True,
         ),
         SALT_PORT: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.NUMBER,
             _('Salt Master API port.'),
             update_allowed=False,
-            default='8000',
+            default=8000,
             required=True,
         ),
         SALT_PROTO: properties.Schema(
@@ -67,6 +67,13 @@ class SaltKey(salt.SaltResource):
             update_allowed=False,
             required=True,
         ),
+        KEYSIZE: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Managed server key size'),
+            update_allowed=False,
+            default=4096,
+            required=True,
+        ),
     }
 
     attributes_schema = {
@@ -83,22 +90,24 @@ class SaltKey(salt.SaltResource):
 
 
     def handle_create(self):
-
         self.login()
-
         self.name = self.properties.get(self.NAME)
-
+        self.keysize = self.properties.get(self.KEYSIZE)
         headers = {'Accept': 'application/json'}
-
         payload = {
             'fun': 'key.gen_accept',
             'client': 'wheel',
             'tgt': '*',
-            'match': self.name
+            'args': [self.name],
+            'kwargs': {
+                'keysize': self.keysize
+            }
         }
 
         request = requests.post(self.salt_master_url, headers=headers,
                                 data=payload, cookies=self.login.cookies)
+
+        logger.info(request.json())
 
         keytype = request.json()['return'][0]['data']['return']
         if keytype:
@@ -128,7 +137,11 @@ class SaltKey(salt.SaltResource):
         logger.error("Could not delete node %s key", self.resource_id)
 
 
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        pass
+
+
 def resource_mapping():
     return {
-        'Salt::Minion::Key': SaltKey,
+        'OS::Salt::MinionKey': MinionKey,
     }

@@ -1,6 +1,6 @@
 resources:
   salt_minion_metadata:
-    type: OS::Salt:Metadata
+    type: OS::Salt::MinionMetadata
     properties:
       name: { get_attr: ['instance', 'name'] }
       classes:

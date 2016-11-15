@@ -26,15 +26,12 @@ class SaltResource(resource.Resource):
                                self.properties.get(self.SALT_PORT))
 
     def login(self):
-
+        url = os.path.join(self.salt_master_url, 'login')
         headers = {'Accept': 'application/json'}
-
-        login_payload = {
+        payload = {
             'username': self.properties[self.SALT_USERNAME],
             'password': self.properties[self.SALT_PASSWORD],
             'eauth': 'pam'
         }
 
-        self.login = requests.post(
-            os.path.join(self.salt_master_url,
-                         'login'), headers=headers, data=login_payload)
+        self.login = requests.post(url, headers=headers, data=payload)

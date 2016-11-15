@@ -1,6 +1,6 @@
 resources:
   salt_minion_key:
-    type: OS::Salt:Key
+    type: OS::Salt::MinionKey
     properties:
       name: { get_attr: ['instance', 'name'] }
       salt_host: { get_param: salt_master_host }

@@ -19,7 +19,7 @@ from heat_salt.resources import salt
 logger = logging.getLogger(__name__)
 
 
-class SaltMetadata(salt.SaltResource):
+class MinionMetadata(salt.SaltResource):
 
     PROPERTIES = (
         SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, CLASSES, PARAMETERS
@@ -35,10 +35,10 @@ class SaltMetadata(salt.SaltResource):
             required=True,
         ),
         SALT_PORT: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.NUMBER,
             _('Salt Master API port.'),
             update_allowed=False,
-            default='8000',
+            default=8000,
             required=True,
         ),
         SALT_PROTO: properties.Schema(
@@ -68,16 +68,16 @@ class SaltMetadata(salt.SaltResource):
             required=True,
         ),
         CLASSES: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.LIST,
             _('Managed server classes.'),
             update_allowed=False,
             required=True,
         ),
         PARAMETERS: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.MAP,
             _('Managed server parameters.'),
             update_allowed=False,
-            required=True,
+            required=False,
         ),
     }
 
@@ -97,37 +97,27 @@ class SaltMetadata(salt.SaltResource):
     def handle_create(self):
         self.login()
         self.name = self.properties.get(self.NAME)
-
+        self.classes = self.properties.get(self.CLASSES)
+        self.parameters = self.properties.get(self.PARAMETERS)
         headers = {'Accept': 'application/json'}
-        
         payload = {
-            'fun': 'key.gen_accept',
-            'client': 'wheel',
+            'fun': 'reclass.node_create',
+            'client': 'local',
             'tgt': '*',
-            'match': self.name
+            'args': [self.name, '_generated'],
+            'kwargs': {
+                'classes': self.classes,
+                'parameters': self.parameters
+            }
         }
 
         request = requests.post(
             self.salt_master_url, headers=headers,
             data=payload, cookies=self.login.cookies)
 
+        logger.info(request.json())
+
         keytype = request.json()['return'][0]['data']['return']
-        if keytype:
-            for key, value in keytype.items():
-                if value[0] == self.registered_name:
-
-                    self.data_set('private_key', value[1], redact=True)
-                    self.data_set('name', self.value[0])
-
-                    self.resource_id_set(self.name)
-
-                    return True
-                    break
-                else:
-                    raise Exception('{} does not match!'.format(key))
-        else:
-            raise Exception(
-                '{} key does not exist in master until now...'.format(keytype))
 
 
     def _show_resource(self):
@@ -135,13 +125,15 @@ class SaltMetadata(salt.SaltResource):
 
 
     def handle_delete(self):
-
         self.login()
-
         logger.error("Could not delete node %s metadata", self.resource_id)
+
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        pass
 
 
 def resource_mapping():
     return {
-        'Salt::Minion::Metadata': SaltMetadata,
+        'OS::Salt::MinionMetadata': MinionMetadata,
     }
