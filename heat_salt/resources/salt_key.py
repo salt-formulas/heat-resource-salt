@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 class MinionKey(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, KEYSIZE
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, FORCE, KEYSIZE
     ) = (
-        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'keysize'
+        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'force', 'keysize'
     )
 
     properties_schema = {
@@ -67,6 +67,13 @@ class MinionKey(salt.SaltResource):
             update_allowed=False,
             required=True,
         ),
+        FORCE: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Force key reation'),
+            update_allowed=False,
+            default=False,
+            required=True,
+        ),
         KEYSIZE: properties.Schema(
             properties.Schema.NUMBER,
             _('Managed server key size'),
@@ -91,41 +98,26 @@ class MinionKey(salt.SaltResource):
 
     def handle_create(self):
         self.login()
-        self.name = self.properties.get(self.NAME)
-        self.keysize = self.properties.get(self.KEYSIZE)
         headers = {'Accept': 'application/json'}
         payload = {
             'fun': 'key.gen_accept',
             'client': 'wheel',
             'tgt': '*',
-            'args': [self.name],
-            'kwargs': {
-                'keysize': self.keysize
-            }
+            'id_': self.properties.get(self.NAME),
+            'force': self.properties.get(self.FORCE),
+            #setting up keysize raises Salt master RSA error
+            #'keysize': self.properties.get(self.KEYSIZE)
         }
-
         request = requests.post(self.salt_master_url, headers=headers,
                                 data=payload, cookies=self.login.cookies)
-
-        logger.info(request.json())
-
-        keytype = request.json()['return'][0]['data']['return']
-        if keytype:
-            for key, value in keytype.items():
-                if value[0] == self.registered_name:
-
-                    self.data_set('private_key', value[1], redact=True)
-                    self.data_set('registered_name', self.value[0])
-
-                    self.resource_id_set(self.registered_name)
-
-                    return True
-                    break
-                else:
-                    raise Exception('{} does not match!'.format(key))
+        data = request.json()['return'][0]['data']['return']
+        if 'priv' in data and 'pub' in data:
+            self.data_set('name', self.properties.get(self.NAME))
+            self.data_set('private_key', data['return'][0]['data']['return']['priv'], redact=True)
+            self.data_set('public_key', data['return'][0]['data']['return']['pub'])
+            self.resource_id_set(self.properties.get(self.NAME))
         else:
-            raise Exception(
-                '{} key does not exist in master until now...'.format(keytype))
+            raise Exception('Error creating/gerating key on salt master.')
 
 
     def _show_resource(self):

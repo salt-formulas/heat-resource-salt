@@ -96,28 +96,29 @@ class MinionMetadata(salt.SaltResource):
 
     def handle_create(self):
         self.login()
-        self.name = self.properties.get(self.NAME)
-        self.classes = self.properties.get(self.CLASSES)
-        self.parameters = self.properties.get(self.PARAMETERS)
         headers = {'Accept': 'application/json'}
         payload = {
             'fun': 'reclass.node_create',
             'client': 'local',
             'tgt': '*',
-            'args': [self.name, '_generated'],
-            'kwargs': {
-                'classes': self.classes,
-                'parameters': self.parameters
-            }
+            'arg': [
+                self.properties.get(self.NAME),
+                '_generated'
+            ],
+            'kwarg': {
+                'classes': self.properties.get(self.CLASSES),
+                'parameters': self.properties.get(self.PARAMETERS)
         }
 
         request = requests.post(
             self.salt_master_url, headers=headers,
             data=payload, cookies=self.login.cookies)
 
-        logger.info(request.json())
-
         keytype = request.json()['return'][0]['data']['return']
+        self.data_set('name', self.properties.get(self.NAME))
+        self.data_set('classes', self.properties.get(self.CLASSES))
+        self.data_set('parameters', self.properties.get(self.PARAMETERS))
+        self.resource_id_set(self.properties.get(self.NAME))
 
 
     def _show_resource(self):
