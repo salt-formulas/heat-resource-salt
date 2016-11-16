@@ -1,0 +1,18 @@
+Source: python-heat-salt
+Maintainer: tcpcloud Packaging Team <pkg-team@tcpcloud.eu>
+Section: python
+Priority: optional
+Build-Depends: debhelper (>= 9),
+               dh-python,
+               python-all,
+               python-pbr,
+               python-setuptools
+Build-Depends-Indep: python-requests,
+                     python-yaml
+Standards-Version: 3.9.6
+Homepage: https://github.com/tcpcloud/heat-resource-salt
+
+Package: python-heat-salt
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: Heat resources for SaltStack
