@@ -2,13 +2,11 @@ Source: python-heat-salt
 Maintainer: tcpcloud Packaging Team <pkg-team@tcpcloud.eu>
 Section: python
 Priority: optional
-Build-Depends: debhelper (>= 9),
-               dh-python,
-               python-all,
-               python-pbr,
-               python-setuptools
+Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 9), dh-python
 Build-Depends-Indep: python-requests,
                      python-yaml,
+                     python-setuptools,
+                     python-pbr,
                      git
 Standards-Version: 3.9.6
 X-Python-Version: >= 2.6
