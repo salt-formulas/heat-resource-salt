@@ -11,7 +11,10 @@ Build-Depends-Indep: python-requests,
                      python-yaml,
                      git
 Standards-Version: 3.9.6
-Homepage: https://github.com/tcpcloud/heat-resource-salt
+X-Python-Version: >= 2.6
+Homepage: https://git.tcpcloud.eu/heat-resources/salt-resources
+Vcs-Browser: https://git.tcpcloud.eu/heat-resources/salt-resources
+Vcs-Git: https://git.tcpcloud.eu/heat-resources/salt-resources.git
 
 Package: python-heat-salt
 Architecture: all
