@@ -126,7 +126,15 @@ class MinionKey(salt.SaltResource):
 
     def handle_delete(self):
         self.login()
-        logger.error("Could not delete node %s key", self.resource_id)
+        headers = {'Accept': 'application/json'}
+        payload = {
+            'fun': 'key.delete',
+            'client': 'wheel',
+            'tgt': '*',
+            'match': self.properties.get(self.NAME),
+        }
+        request = requests.post(self.salt_master_url, headers=headers,
+                                data=payload, cookies=self.login.cookies)
 
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):

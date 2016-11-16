@@ -108,6 +108,7 @@ class MinionMetadata(salt.SaltResource):
             'kwarg': {
                 'classes': self.properties.get(self.CLASSES),
                 'parameters': self.properties.get(self.PARAMETERS)
+            }
         }
 
         request = requests.post(
@@ -127,7 +128,19 @@ class MinionMetadata(salt.SaltResource):
 
     def handle_delete(self):
         self.login()
-        logger.error("Could not delete node %s metadata", self.resource_id)
+        headers = {'Accept': 'application/json'}
+        payload = {
+            'fun': 'reclass.node_delete',
+            'client': 'local',
+            'tgt': '*',
+            'arg': [
+                self.properties.get(self.NAME),
+            ],
+        }
+
+        request = requests.post(
+            self.salt_master_url, headers=headers,
+            data=payload, cookies=self.login.cookies)
 
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
