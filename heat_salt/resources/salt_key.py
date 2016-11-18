@@ -113,8 +113,8 @@ class MinionKey(salt.SaltResource):
         data = request.json()['return'][0]['data']['return']
         if 'priv' in data and 'pub' in data:
             self.data_set('name', self.properties.get(self.NAME))
-            self.data_set('private_key', data['return'][0]['data']['return']['priv'], redact=True)
-            self.data_set('public_key', data['return'][0]['data']['return']['pub'])
+            self.data_set('private_key', data['priv'], redact=True)
+            self.data_set('public_key', data['pub'])
             self.resource_id_set(self.properties.get(self.NAME))
         else:
             raise Exception('Error creating/gerating key on salt master.')
