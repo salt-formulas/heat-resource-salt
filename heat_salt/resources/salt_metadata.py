@@ -27,6 +27,12 @@ class MinionMetadata(salt.SaltResource):
         'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'classes', 'parameters'
     )
 
+    ATTRIBUTES = (
+        NAME, CLASSES, PARAMETERS,
+    ) = (
+        'name', 'classes', 'parameters'
+    )
+
     properties_schema = {
         SALT_HOST: properties.Schema(
             properties.Schema.STRING,
@@ -82,16 +88,27 @@ class MinionMetadata(salt.SaltResource):
     }
 
     attributes_schema = {
-        "name": attributes.Schema(
-            _('Name of the host.'),
+        NAME: attributes.Schema(
+            _('Name of the server.'),
+            type: attributes.Schema.STRING
         ),
-        "classes": attributes.Schema(
-            _('Classes assigned to the node.'),
+        CLASSES: attributes.Schema(
+            _('Classes assigned to the server.'),
+            type: attributes.Schema.LIST
         ),
-        "parameters": attributes.Schema(
-            _('Optional parameters of the node.'),
+        PARAMETERS: attributes.Schema(
+            _('Custom parameters of the server.'),
+            type: attributes.Schema.MAP
         ),
     }
+
+
+    def _show_resource(self):
+        return self.data()
+
+
+    def _resolve_attribute(self, key):
+        return self.data().get(key, None)
 
 
     def handle_create(self):
@@ -120,10 +137,6 @@ class MinionMetadata(salt.SaltResource):
         self.data_set('classes', self.properties.get(self.CLASSES))
         self.data_set('parameters', self.properties.get(self.PARAMETERS))
         self.resource_id_set(self.properties.get(self.NAME))
-
-
-    def _show_resource(self):
-        return self.data()
 
 
     def handle_delete(self):

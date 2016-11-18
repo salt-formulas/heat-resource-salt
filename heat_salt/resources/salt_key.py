@@ -27,6 +27,12 @@ class MinionKey(salt.SaltResource):
         'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'name', 'force', 'keysize'
     )
 
+    ATTRIBUTES = (
+        NAME, PRIVATE_KEY, PUBLIC_KEY,
+    ) = (
+        'name', 'private_key', 'public_key'
+    )
+
     properties_schema = {
         SALT_HOST: properties.Schema(
             properties.Schema.STRING,
@@ -84,16 +90,27 @@ class MinionKey(salt.SaltResource):
     }
 
     attributes_schema = {
-        "name": attributes.Schema(
+        NAME: attributes.Schema(
             _('Name of the server.'),
+            type: attributes.Schema.STRING
         ),
-        "private_key": attributes.Schema(
-            _('Private key of the node.'),
+        PRIVATE_KEY: attributes.Schema(
+            _('Private key of the server.'),
+            type: attributes.Schema.STRING
         ),
-        "public_key": attributes.Schema(
-            _('Public key of the node.'),
+        PUBLIC_KEY: attributes.Schema(
+            _('Public key of the server.'),
+            type: attributes.Schema.STRING
         ),
     }
+
+
+    def _show_resource(self):
+        return self.data()
+
+
+    def _resolve_attribute(self, key):
+        return self.data().get(key, None)
 
 
     def handle_create(self):
@@ -118,10 +135,6 @@ class MinionKey(salt.SaltResource):
             self.resource_id_set(self.properties.get(self.NAME))
         else:
             raise Exception('Error creating/gerating key on salt master.')
-
-
-    def _show_resource(self):
-        return self.data()
 
 
     def handle_delete(self):
