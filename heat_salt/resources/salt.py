@@ -29,7 +29,7 @@ class SaltResource(resource.Resource):
         url = os.path.join(self.salt_master_url, 'login')
         headers = {'Accept': 'application/json'}
         payload = {
-            'username': self.properties[self.SALT_USERNAME],
+            'username': self.properties[self.SALT_USER],
             'password': self.properties[self.SALT_PASSWORD],
             'eauth': 'pam'
         }
