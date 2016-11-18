@@ -132,7 +132,6 @@ class MinionMetadata(salt.SaltResource):
             self.salt_master_url, headers=headers,
             data=payload, cookies=self.login.cookies)
 
-        data = request.json()['return'][0]['data']['return']
         self.data_set('name', self.properties.get(self.NAME))
         self.data_set('classes', self.properties.get(self.CLASSES))
         self.data_set('parameters', self.properties.get(self.PARAMETERS))
