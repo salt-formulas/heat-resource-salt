@@ -90,15 +90,15 @@ class MinionMetadata(salt.SaltResource):
     attributes_schema = {
         NAME: attributes.Schema(
             _('Name of the server.'),
-            type: attributes.Schema.STRING
+            type=attributes.Schema.STRING
         ),
         CLASSES: attributes.Schema(
             _('Classes assigned to the server.'),
-            type: attributes.Schema.LIST
+            type=attributes.Schema.LIST
         ),
         PARAMETERS: attributes.Schema(
             _('Custom parameters of the server.'),
-            type: attributes.Schema.MAP
+            type=attributes.Schema.MAP
         ),
     }
 

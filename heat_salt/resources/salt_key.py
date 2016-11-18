@@ -92,15 +92,15 @@ class MinionKey(salt.SaltResource):
     attributes_schema = {
         NAME: attributes.Schema(
             _('Name of the server.'),
-            type: attributes.Schema.STRING
+            type=attributes.Schema.STRING
         ),
         PRIVATE_KEY: attributes.Schema(
             _('Private key of the server.'),
-            type: attributes.Schema.STRING
+            type=attributes.Schema.STRING
         ),
         PUBLIC_KEY: attributes.Schema(
             _('Public key of the server.'),
-            type: attributes.Schema.STRING
+            type=attributes.Schema.STRING
         ),
     }
 
