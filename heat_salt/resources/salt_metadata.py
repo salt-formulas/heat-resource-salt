@@ -1,5 +1,6 @@
 
 import requests
+import json
 
 try:
     from heat.common.i18n import _
@@ -120,21 +121,23 @@ class MinionMetadata(salt.SaltResource):
             'tgt': '*',
             'arg': [
                 self.properties.get(self.NAME),
-                '_generated'
-            ],
-            'kwarg': {
-                'classes': self.properties.get(self.CLASSES),
-                'parameters': self.properties.get(self.PARAMETERS)
-            }
+                '_generated',
+                'default',
+                'prd',
+                json.dumps(self.properties.get(self.CLASSES)),
+                json.dumps(self.properties.get(self.PARAMETERS))
+            ]
         }
+
+        logger.info(payload)
 
         request = requests.post(
             self.salt_master_url, headers=headers,
             data=payload, cookies=self.login.cookies)
 
         self.data_set('name', self.properties.get(self.NAME))
-        self.data_set('classes', self.properties.get(self.CLASSES))
-        self.data_set('parameters', self.properties.get(self.PARAMETERS))
+        self.data_set('classes', json.dumps(self.properties.get(self.CLASSES)))
+        self.data_set('parameters', json.dumps(self.properties.get(self.PARAMETERS)))
         self.resource_id_set(self.properties.get(self.NAME))
 
 
