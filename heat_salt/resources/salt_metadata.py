@@ -88,6 +88,7 @@ class MinionMetadata(salt.SaltResource):
         ),
     }
 
+
     attributes_schema = {
         NAME: attributes.Schema(
             _('Name of the server.'),
@@ -153,10 +154,13 @@ class MinionMetadata(salt.SaltResource):
             ],
         }
 
-        request = requests.post(
-            self.salt_master_url, headers=headers,
-            data=payload, cookies=self.login.cookies)
-
+        try:
+            request = requests.post(self.salt_master_url,
+                                    headers=headers,
+                                    data=payload,
+                                    cookies=self.login.cookies)
+        except:
+            pass
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         pass
