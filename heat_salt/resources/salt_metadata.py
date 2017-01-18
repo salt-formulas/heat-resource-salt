@@ -143,7 +143,6 @@ class MinionMetadata(salt.SaltResource):
 
 
     def handle_delete(self):
-        self.login()
         headers = {'Accept': 'application/json'}
         payload = {
             'fun': 'reclass.node_delete',
@@ -155,12 +154,14 @@ class MinionMetadata(salt.SaltResource):
         }
 
         try:
+            self.login()
             request = requests.post(self.salt_master_url,
                                     headers=headers,
                                     data=payload,
                                     cookies=self.login.cookies)
         except:
             pass
+
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         pass
