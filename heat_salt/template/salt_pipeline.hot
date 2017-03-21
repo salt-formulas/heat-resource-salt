@@ -1,0 +1,39 @@
+resources:
+  salt_pipeline_pre_init:
+    type: OS::Salt::Pipeline
+    properties:
+      salt_host: { get_param: salt_master_host }
+      salt_port: { get_param: salt_master_port }
+      salt_proto: { get_param: salt_master_proto }
+      salt_user: { get_param: salt_master_user }
+      salt_password: { get_param: salt_master_password }
+      create_pipeline:
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.user
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.package
+      delete_pipeline:
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.repo
+  salt_pipeline_post_init:
+    type: OS::Salt::Pipeline
+    properties:
+      salt_host: { get_param: salt_master_host }
+      salt_port: { get_param: salt_master_port }
+      salt_proto: { get_param: salt_master_proto }
+      salt_user: { get_param: salt_master_user }
+      salt_password: { get_param: salt_master_password }
+      create_pipeline:
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.repo
+      delete_pipeline:
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.user
+      - tgt: "G@oscodename:ubuntu"
+        fun: state.apply
+        arg: linux.system.package

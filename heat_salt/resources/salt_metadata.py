@@ -20,7 +20,7 @@ from heat_salt.resources import salt
 logger = logging.getLogger(__name__)
 
 
-class MinionMetadata(salt.SaltResource):
+class SaltMinionMetadata(salt.SaltResource):
 
     PROPERTIES = (
         SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, NAME, CLASSES, PARAMETERS
@@ -169,5 +169,5 @@ class MinionMetadata(salt.SaltResource):
 
 def resource_mapping():
     return {
-        'OS::Salt::MinionMetadata': MinionMetadata,
+        'OS::Salt::MinionMetadata': SaltMinionMetadata,
     }
