@@ -1,4 +1,6 @@
 
+import six
+import uuid
 import requests
 import json
 
@@ -88,7 +90,6 @@ class SaltMinionMetadata(salt.SaltResource):
         ),
     }
 
-
     attributes_schema = {
         NAME: attributes.Schema(
             _('Name of the server.'),
@@ -104,14 +105,11 @@ class SaltMinionMetadata(salt.SaltResource):
         ),
     }
 
-
     def _show_resource(self):
         return self.data()
 
-
     def _resolve_attribute(self, key):
         return self.data().get(key, None)
-
 
     def handle_create(self):
         self.login()
@@ -138,9 +136,9 @@ class SaltMinionMetadata(salt.SaltResource):
 
         self.data_set('name', self.properties.get(self.NAME))
         self.data_set('classes', json.dumps(self.properties.get(self.CLASSES)))
-        self.data_set('parameters', json.dumps(self.properties.get(self.PARAMETERS)))
-        self.resource_id_set(self.properties.get(self.NAME))
-
+        self.data_set('parameters', json.dumps(
+            self.properties.get(self.PARAMETERS)))
+        self.resource_id_set(six.text_type(uuid.uuid4()))
 
     def handle_delete(self):
         headers = {'Accept': 'application/json'}
@@ -159,9 +157,8 @@ class SaltMinionMetadata(salt.SaltResource):
                                     headers=headers,
                                     data=payload,
                                     cookies=self.login.cookies)
-        except:
+        except Exception:
             pass
-
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         pass

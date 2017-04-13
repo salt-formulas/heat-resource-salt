@@ -1,4 +1,6 @@
 
+import six
+import uuid
 import requests
 
 try:
@@ -132,7 +134,7 @@ class SaltMinionKey(salt.SaltResource):
             self.data_set('name', self.properties.get(self.NAME))
             self.data_set('private_key', data['priv'], redact=True)
             self.data_set('public_key', data['pub'])
-            self.resource_id_set(self.properties.get(self.NAME))
+            self.resource_id_set(six.text_type(uuid.uuid4()))
         else:
             raise Exception('Error occured when creating keys on Salt master.')
 

@@ -1,4 +1,6 @@
 
+import six
+import uuid
 import requests
 
 try:
@@ -92,14 +94,11 @@ class SaltPipeline(salt.SaltResource):
         ),
     }
 
-
     def _show_resource(self):
         return self.data()
 
-
     def _resolve_attribute(self, key):
         return self.data().get(key, None)
-
 
     def handle_create(self):
         self.login()
@@ -117,7 +116,7 @@ class SaltPipeline(salt.SaltResource):
             data = request.json()['return'][0]['data']['return']
             output.append(data)
         self.data_set('create_output', '\n'.join(str(output)))
-
+        self.resource_id_set(six.text_type(uuid.uuid4()))
 
     def handle_delete(self):
         self.login()
