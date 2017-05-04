@@ -24,9 +24,11 @@ logger = logging.getLogger(__name__)
 class SaltPipeline(salt.SaltResource):
 
     PROPERTIES = (
-        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD, CREATE_PIPELINE, DELETE_PIPELINE,
+        SALT_HOST, SALT_PORT, SALT_PROTO, SALT_USER, SALT_PASSWORD,
+        CREATE_PIPELINE, DELETE_PIPELINE,
     ) = (
-        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password', 'create_pipeline', 'delete_pipeline'
+        'salt_host', 'salt_port', 'salt_proto', 'salt_user', 'salt_password',
+        'create_pipeline', 'delete_pipeline'
     )
 
     ATTRIBUTES = (
@@ -113,7 +115,9 @@ class SaltPipeline(salt.SaltResource):
             }
             request = requests.post(self.salt_master_url, headers=headers,
                                     data=payload, cookies=self.login.cookies)
-            data = request.json()['return'][0]['data']['return']
+            raw_data = request.json()
+
+            data = raw_data['return'][0]['data']['return']
             output.append(data)
         self.data_set('create_output', '\n'.join(str(output)))
         self.resource_id_set(six.text_type(uuid.uuid4()))
@@ -134,7 +138,6 @@ class SaltPipeline(salt.SaltResource):
             data = request.json()['return'][0]['data']['return']
             output.append(data)
         self.data_set('delete_output', '\n'.join(str(output)))
-
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         pass

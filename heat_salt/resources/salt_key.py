@@ -106,14 +106,11 @@ class SaltMinionKey(salt.SaltResource):
         ),
     }
 
-
     def _show_resource(self):
         return self.data()
 
-
     def _resolve_attribute(self, key):
         return self.data().get(key, None)
-
 
     def handle_create(self):
         self.login()
@@ -124,7 +121,7 @@ class SaltMinionKey(salt.SaltResource):
             'tgt': '*',
             'id_': self.properties.get(self.NAME),
             'force': self.properties.get(self.FORCE),
-            #setting up keysize raises Salt master RSA error
+            # setting up keysize raises Salt master RSA error
             #'keysize': self.properties.get(self.KEYSIZE)
         }
         request = requests.post(self.salt_master_url, headers=headers,
@@ -137,7 +134,6 @@ class SaltMinionKey(salt.SaltResource):
             self.resource_id_set(six.text_type(uuid.uuid4()))
         else:
             raise Exception('Error occured when creating keys on Salt master.')
-
 
     def handle_delete(self):
         headers = {'Accept': 'application/json'}
@@ -154,9 +150,8 @@ class SaltMinionKey(salt.SaltResource):
                                     headers=headers,
                                     data=payload,
                                     cookies=self.login.cookies)
-        except:
+        except Exception:
             pass
-
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         pass
